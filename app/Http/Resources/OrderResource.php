@@ -18,7 +18,7 @@ class OrderResource extends JsonResource
             "id" => $this->id,
             "total_price" => (float) $this->total_price,
             "products_count" => (int) $this->products_count,
-            "is_done" => (bool) $this->is_done,
+            "status" => $this->status,
             "user" => [
                 "id" => $this->user->id,
                 "name" => $this->user->name,

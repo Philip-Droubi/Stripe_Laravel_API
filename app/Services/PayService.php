@@ -2,18 +2,14 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
 use App\Exceptions\InvalidRequestException;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\MainService;
 use Illuminate\Support\Facades\DB;
-use Stripe\Webhook;
-use Stripe\Customer;
-use Stripe\Price;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
-use Stripe\Exception\UnexpectedValueException;
-use Stripe\Exception\SignatureVerificationException;
 
 /**
  * Class PayService.
@@ -38,8 +34,8 @@ class PayService extends MainService
             ];
         }
         Stripe::setApiKey(config('custom.stripe_secret'));
-        if ($order->is_done)
-            throw new InvalidRequestException("You already paid for this order.", 400);
+        if ($order->status != OrderStatus::PENDING->value)
+            throw new InvalidRequestException("You cannot pay for this order.", 400);
         //App Domain
         $domain = config('app.url');
         //Create checkout session
@@ -51,30 +47,37 @@ class PayService extends MainService
             ],
             'metadata' => ['order_id' => $order->id, 'user_id' => $user->id],
             'mode' => 'payment',
-            'success_url' => $domain . '/api/checkout-success?order_id=' . $order->id,
-            'cancel_url' => $domain . '/api/checkout-cancel?order_id=' . $order->id,
+            'success_url' => $domain . '/checkout-success?session_id={CHECKOUT_SESSION_ID}&order_id=' . $order->id,
+            'cancel_url' => $domain . '/checkout-cancel?session_id={CHECKOUT_SESSION_ID}&order_id=' . $order->id,
         ]);
+        $order->session_id = $checkOutSession->id;
+        $order->save();
         return $checkOutSession->url;
     }
 
-    public function paySuccess($order_id)
+    public function paySuccess($order_id, $session_id)
     {
         DB::beginTransaction();
-        Order::query()->where('is_done', 0)->findOrFail($order_id)
-            ->update(['is_done' => true]);
+        Order::query()->where(['status' => OrderStatus::PENDING->value, 'session_id' => $session_id])
+            ->findOrFail($order_id)
+            ->update(['status' => OrderStatus::DONE->value]);
         DB::commit();
         return true;
     }
 
-    public function payCancel($order_id)
+    public function payCancel($order_id, $session_id)
     {
         DB::beginTransaction();
-        $order = Order::query()->where('is_done', 0)->with('products')->findOrFail($order_id);
+        $order = Order::query()->where(['status' => OrderStatus::PENDING->value, 'session_id' => $session_id])
+            ->with('products')
+            ->findOrFail($order_id);
         foreach ($order->products as $product) {
             Product::where('id', $product->id)->update([
                 'amount' => DB::raw('amount + ' . $product->pivot->amount)
             ]);
         }
+        $order->status = OrderStatus::CANCEL->value;
+        $order->save();
         DB::commit();
         return true;
     }
