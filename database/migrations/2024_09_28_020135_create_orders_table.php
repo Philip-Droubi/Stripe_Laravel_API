@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->float("total_price");
-            $table->boolean("is_done")->default(false);
+            $table->text('session_id')->unique()->nullable();
+            $table->enum("status", \App\Enums\OrderStatus::values())->default(\App\Enums\OrderStatus::PENDING->value);
             $table->timestamps();
         });
     }

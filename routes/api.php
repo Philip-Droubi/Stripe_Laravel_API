@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +44,3 @@ Route::prefix("products")->controller(ProductController::class)->group(function 
     Route::get("/", "index");
     Route::get("/{id}", "show");
 });
-
-Route::get('/checkout-success', [CheckoutController::class, 'checkoutSuccess']);
-Route::get('/checkout-cancel', [CheckoutController::class, 'checkoutCancel']);

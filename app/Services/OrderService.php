@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\OrderStatus;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\Product;
@@ -45,7 +46,7 @@ class OrderService extends MainService
         $order = Order::create([
             "user_id" => auth()->id(),
             "total_price" => $totlaPrice,
-            "is_done" => false,
+            "status" => OrderStatus::PENDING->value,
         ]);
 
         foreach ($productsIds as $id) {
