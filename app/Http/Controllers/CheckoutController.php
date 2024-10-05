@@ -11,17 +11,21 @@ class CheckoutController extends Controller
 
     public function checkoutSuccess(Request $request)
     {
-        $order_id = $request->query('order_id');
         $session_id = $request->query('session_id');
-        $this->payService->paySuccess($order_id, $session_id);
+        $this->payService->paySuccess($session_id);
         return view('payment_success');
     }
 
     public function checkoutCancel(Request $request)
     {
-        $order_id = $request->query('order_id');
         $session_id = $request->query('session_id');
-        $this->payService->payCancel($order_id, $session_id);
+        $this->payService->payCancel($session_id);
         return view('payment_cancel');
+    }
+
+    public function webhook()
+    {
+        $this->payService->webhook();
+        return $this->success();
     }
 }

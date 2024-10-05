@@ -9,7 +9,9 @@ use App\Models\Product;
 use App\Services\MainService;
 use Illuminate\Support\Facades\DB;
 use Stripe\Stripe;
+use Stripe\Webhook;
 use Stripe\Checkout\Session;
+use Stripe\Exception\SignatureVerificationException;
 
 /**
  * Class PayService.
@@ -43,34 +45,37 @@ class PayService extends MainService
             'customer_email' => $user->email,
             'line_items' => $lineItems,
             'payment_intent_data' => [
-                'metadata' => ['order_id' => $order->id, 'user_id' => $user->id],
+                'metadata' => ['user_id' => $user->id],
             ],
-            'metadata' => ['order_id' => $order->id, 'user_id' => $user->id],
+            'metadata' => ['user_id' => $user->id],
             'mode' => 'payment',
-            'success_url' => $domain . '/checkout-success?session_id={CHECKOUT_SESSION_ID}&order_id=' . $order->id,
-            'cancel_url' => $domain . '/checkout-cancel?session_id={CHECKOUT_SESSION_ID}&order_id=' . $order->id,
+            'success_url' => $domain . '/checkout-success?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => $domain . '/checkout-cancel?session_id={CHECKOUT_SESSION_ID}',
         ]);
         $order->session_id = $checkOutSession->id;
         $order->save();
         return $checkOutSession->url;
     }
 
-    public function paySuccess($order_id, $session_id)
+    public function paySuccess($session_id)
     {
         DB::beginTransaction();
-        Order::query()->where(['status' => OrderStatus::PENDING->value, 'session_id' => $session_id])
-            ->findOrFail($order_id)
-            ->update(['status' => OrderStatus::DONE->value]);
+        $order = Order::query()->where(['session_id' => $session_id])
+            ->firstOrFail();
+        if (!$order->status == OrderStatus::PENDING->value) {
+            $order->status = OrderStatus::DONE->value;
+            $order->save();
+        }
         DB::commit();
         return true;
     }
 
-    public function payCancel($order_id, $session_id)
+    public function payCancel($session_id)
     {
         DB::beginTransaction();
         $order = Order::query()->where(['status' => OrderStatus::PENDING->value, 'session_id' => $session_id])
             ->with('products')
-            ->findOrFail($order_id);
+            ->firstOrFail();
         foreach ($order->products as $product) {
             Product::where('id', $product->id)->update([
                 'amount' => DB::raw('amount + ' . $product->pivot->amount)
@@ -79,6 +84,45 @@ class PayService extends MainService
         $order->status = OrderStatus::CANCEL->value;
         $order->save();
         DB::commit();
+        return true;
+    }
+
+    public function webhook()
+    {
+        $webhookSecret = config('custom.stripe_webhook');
+        $payload = @file_get_contents('php://input');
+        $sig_header = $_SERVER['HTTP_STRIPE_SIGNATURE'];
+        $event = null;
+
+        //Create a stripe webhook construct event
+        try {
+            $event = Webhook::constructEvent($payload, $sig_header, $webhookSecret);
+        } catch (\UnexpectedValueException $ex) {
+            //Invalid payload
+            throw new InvalidRequestException("", 400);
+        } catch (SignatureVerificationException $ex) {
+            //Invalid signature
+            throw new InvalidRequestException("", 400);
+        }
+
+        //Handle events by its types
+        switch ($event->type) {
+            case 'checkout.session.completed':
+                $session = $event->data->object;
+                $sessionId = $session->id;
+                DB::beginTransaction();
+                $order = Order::query()->where(['session_id' => $sessionId])
+                    ->firstOrFail();
+                if (!$order->status == OrderStatus::PENDING->value) {
+                    $order->status = OrderStatus::DONE->value;
+                    $order->save();
+                }
+                DB::commit();
+                break;
+
+            default:
+                throw new InvalidRequestException("", 400);
+        }
         return true;
     }
 }

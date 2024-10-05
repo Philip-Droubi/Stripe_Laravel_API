@@ -19,18 +19,30 @@ To clone and run this project:
 
 `composer install`
 
-- After that, you need to have an account on [Stripe](https://stripe.com/) to get the publishable and secret keys from the developer dashboard
+- After that, you need to have an account on [Stripe](https://stripe.com/) to get the publishable and secret keys from the developer dashboard.
 
-After you get these keys put them in the project .env file:
+When you get these keys copy and paste them into the project .env file
 
 ```bash
 STRIPE_PUBLISHABLE_TEST_KEY=pk_test_*********
 STRIPE_SECRET_TEST_KEY=sk_test_*********
+STRIPE_WEBHOOK_SECRET_KEY=whsec_*********
 ```
 
 - Create a database.
 
 - Run `php artisan migrate --seed`
+
+## How to use Stripe webhook locally?
+
+1. Download `Stripe CLI` from [HERE]<https://>.
+2. Once downloaded, open the cmd in the stripe.exe folder and run `stripe login`.
+3. Copy the given link and paste it into the browser.
+4. Verify your connection using the email sent by Stripe to your email address.
+5. Compare the pairing code displayed in your cmd with the one in the browser UI.
+6. If they match, click "allow" in the browser.
+7. In the cmd, enter the following command: `stripe listen --forward-to http://127.0.0.1:8000/webhook`
+8. Copy the webhook signing secret and paste it in the `.env` file.
 
 ## Ready to use account in the system
 
