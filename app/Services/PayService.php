@@ -57,7 +57,7 @@ class PayService extends MainService
         return $checkOutSession->url;
     }
 
-    public function paySuccess($session_id)
+public function paySuccess($session_id)
     {
         DB::beginTransaction();
         $order = Order::query()->where(['session_id' => $session_id])
@@ -70,7 +70,7 @@ class PayService extends MainService
         return true;
     }
 
-    public function payCancel($session_id)
+public function payCancel($session_id)
     {
         DB::beginTransaction();
         $order = Order::query()->where(['status' => OrderStatus::PENDING->value, 'session_id' => $session_id])

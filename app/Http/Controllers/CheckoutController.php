@@ -13,6 +13,7 @@ class CheckoutController extends Controller
     {
         $session_id = $request->query('session_id');
         $this->payService->paySuccess($session_id);
+        $this->payService->paySuccess($order_id, $session_id);
         return view('payment_success');
     }
 
