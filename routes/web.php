@@ -20,3 +20,4 @@ Route::get('/', function () {
 
 Route::get('/checkout-success', [CheckoutController::class, 'checkoutSuccess']);
 Route::get('/checkout-cancel', [CheckoutController::class, 'checkoutCancel']);
+Route::post('/webhook', [CheckoutController::class, 'webhook']);
