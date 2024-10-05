@@ -46,14 +46,14 @@ STRIPE_WEBHOOK_SECRET_KEY=whsec_*********
 
 ## Ready to use account in the system
 
-email: philip@email.com
-password: phil1234
+- email: philip@email.com
+- password: phil1234
 
 ## Stripe form data for testing
 
 - Card Number: 4242 4242 4242 4242
 - Date of expire: 12/28
-- CVC:123
+- CVC: 123
 - Cardholder name: any name
 
 Now you are ready to go 😃
