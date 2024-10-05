@@ -35,7 +35,7 @@ STRIPE_WEBHOOK_SECRET_KEY=whsec_*********
 
 ## How to use Stripe webhook locally?
 
-1. Download `Stripe CLI` from [Stripe](https://https://github.com/stripe/stripe-cli/releases).
+1. Download `Stripe CLI` from [HERE](https://https://github.com/stripe/stripe-cli/releases).
 2. Once downloaded, open the cmd in the stripe.exe folder and run `stripe login`.
 3. Copy the given link and paste it into the browser.
 4. Verify your connection using the email sent by Stripe to your email address.
