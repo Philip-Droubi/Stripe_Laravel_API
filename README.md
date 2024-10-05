@@ -42,7 +42,7 @@ STRIPE_WEBHOOK_SECRET_KEY=whsec_*********
 5. Compare the pairing code displayed in your cmd with the one in the browser UI.
 6. If they match, click "allow" in the browser.
 7. In the cmd, enter the following command: `stripe listen --forward-to http://127.0.0.1:8000/webhook`
-8. Copy the webhook signing secret and paste it in the `.env` file.
+8. Copy the webhook signing secret and paste it in the `.env` file `STRIPE_WEBHOOK_SECRET_KEY=whsec_*********`.
 
 ## Ready to use account in the system
 
