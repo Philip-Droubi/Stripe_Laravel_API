@@ -31,6 +31,8 @@ STRIPE_WEBHOOK_SECRET_KEY=whsec_*********
 
 - Create a database.
 
+- Run `php artisan key:generate`
+
 - Run `php artisan migrate --seed`
 
 ## How to use Stripe webhook locally?
