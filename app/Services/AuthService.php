@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Hash;
  */
 class AuthService extends MainService
 {
-    public function register($validatedData)
+    public function register($validatedData): array
     {
         DB::beginTransaction();
         $user = User::create([
@@ -20,24 +20,26 @@ class AuthService extends MainService
             "email" => $validatedData["email"],
             "password" => Hash::make($validatedData["password"]),
         ]);
-        $token = $user->createToken('access_token');
-        $data["token"] = $token->plainTextToken;
-        $data["user_id"] = $user->id;
+        $data = [
+            "token" => $user->createToken('access_token')->plainTextToken,
+            "user_id" => $user->id
+        ];
         DB::commit();
         return $data;
     }
 
-    public function login($user)
+    public function login($user): array
     {
         DB::beginTransaction();
-        $token = $user->createToken('access_token');
-        $data["token"] = $token->plainTextToken;
-        $data["user_id"] = $user->id;
+        $data = [
+            "token" => $user->createToken('access_token')->plainTextToken,
+            "user_id" => $user->id
+        ];
         DB::commit();
         return ["data" => $data];
     }
 
-    public function logout($user)
+    public function logout($user): bool
     {
         DB::beginTransaction();
         $user->currentAccessToken()->delete();
@@ -45,7 +47,7 @@ class AuthService extends MainService
         return true;
     }
 
-    public function logoutAllDevices($user)
+    public function logoutAllDevices($user): bool
     {
         DB::beginTransaction();
         $user->tokens()->delete();

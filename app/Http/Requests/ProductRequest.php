@@ -31,7 +31,7 @@ class ProductRequest extends FormRequest
         };
     }
 
-    public function storeRules()
+    public function storeRules(): array
     {
         return [
             "name" => ["required", "max:255"],
@@ -40,7 +40,7 @@ class ProductRequest extends FormRequest
         ];
     }
 
-    public function updateRules()
+    public function updateRules(): array
     {
         return [
             "name" => ["required", "max:255"],
@@ -49,12 +49,12 @@ class ProductRequest extends FormRequest
         ];
     }
 
-    public function failedValidation(Validator $validator)
+    public function failedValidation(Validator $validator): never
     {
         throw new HttpResponseException($this->fail($validator->errors()->first()));
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [];
     }

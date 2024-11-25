@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\PayService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
@@ -23,7 +24,7 @@ class CheckoutController extends Controller
         return view('payment_cancel');
     }
 
-    public function webhook()
+    public function webhook(): JsonResponse
     {
         $this->payService->webhook();
         return $this->success();

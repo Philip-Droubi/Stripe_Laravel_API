@@ -31,13 +31,17 @@ class CancelPayments extends Command
     public function handle()
     {
         $orders = Order::query()->where(["status" => OrderStatus::PENDING->value])
-            ->where("created_at", '<', Carbon::now()->subHours(3))->get();
-        foreach ($orders as $order) { //n^2 Time complexity
+            ->where("created_at", '<', Carbon::now()->subHours(3))
+            ->with("products")
+            ->get();
+
+        foreach ($orders as $order) {
             foreach ($order->products as $product) {
                 Product::where('id', $product->id)->update([
                     'amount' => DB::raw('amount + ' . $product->pivot->amount)
                 ]);
             }
+
             $order["status"] = OrderStatus::CANCEL->value;
             $order->save();
         }

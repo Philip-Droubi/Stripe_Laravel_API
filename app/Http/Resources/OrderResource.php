@@ -14,7 +14,7 @@ class OrderResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $data = [
+        return [
             "id" => $this->id,
             "total_price" => (float) $this->total_price,
             "products_count" => (int) $this->products_count,
@@ -23,18 +23,14 @@ class OrderResource extends JsonResource
                 "id" => $this->user->id,
                 "name" => $this->user->name,
             ],
+            "products" => $this->products->map(function ($product): array {
+                return [
+                    "id" => $product->id,
+                    "name" => $product->name,
+                    "price" => (float) $product->price,
+                    "amount" => (int) $product->pivot->amount,
+                ];
+            })->toArray(),
         ];
-
-        $products = [];
-        foreach ($this->products as $product) {
-            $products[] = [
-                "id" => $product->id,
-                "name" => $product->name,
-                "price" => (float) $this->price,
-                "amount" => (int) $product->pivot->amount,
-            ];
-        }
-        $data["products"] = $products;
-        return $data;
     }
 }

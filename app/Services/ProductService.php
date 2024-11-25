@@ -12,29 +12,27 @@ use Illuminate\Support\Facades\DB;
  */
 class ProductService extends MainService
 {
-    public function list($search)
+    public function list($search): array
     {
         $data = [];
-        $items = [];
+
         //Get products
         $products = Product::query();
         if ($search)
             $products->where('name', 'like', '%' . strtolower($search) . '%');
         $products = $products->with("user")
-            ->orderBy("created_at", "desc")->paginate(16);
+            ->orderBy("created_at", "desc")
+            ->paginate(16);
+
         //Generate response
-        foreach ($products as $product) {
-            $items[] = new ProductResource($product);
-        }
-        $data["items"] = $items;
-        $data = $this->setPaginationData($products, $data);
-        return $data;
+        $data["items"] = ProductResource::collection($products);
+        return $this->setPaginationData($products, $data);
     }
 
-    public function store($validatedData)
+    public function store($validatedData): bool
     {
         DB::beginTransaction();
-        $product = Product::create([
+        Product::create([
             "user_id" => auth()->id(),
             "name" => $validatedData["name"],
             "amount" => $validatedData["amount"],
@@ -44,13 +42,16 @@ class ProductService extends MainService
         return true;
     }
 
-    public function show($id)
+    public function show($id): ProductResource
     {
-        $product = Product::query()->with(["user"])->findOrFail($id);
-        return new ProductResource($product);
+        return new ProductResource(
+            Product::query()
+                ->with(["user"])
+                ->findOrFail($id)
+        );
     }
 
-    public function update($validatedData, $id)
+    public function update($validatedData, $id): bool
     {
         DB::beginTransaction();
         $product = Product::query()->where("user_id", auth()->id())->findOrFail($id);
@@ -62,8 +63,11 @@ class ProductService extends MainService
         return true;
     }
 
-    public function destroy($id)
+    public function destroy($id): bool
     {
-        return Product::query()->where("user_id", auth()->id())->findOrFail($id)->delete();
+        return Product::query()
+            ->where("user_id", auth()->id())
+            ->findOrFail($id)
+            ->delete();
     }
 }

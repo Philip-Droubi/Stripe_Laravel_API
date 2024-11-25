@@ -16,25 +16,22 @@ class OrderService extends MainService
 {
     public function __construct(private PayService $payService) {}
 
-    public function myOrders()
+    public function myOrders(): array
     {
         $data = [];
-        $items = [];
         //Get orders
         $orders = Order::query()
-            ->where('user_id', auth()->id())->with(['user', 'products'])
+            ->where('user_id', auth()->id())
+            ->with(['user', 'products'])
             ->withCount('products')
-            ->orderBy("created_at", "desc")->paginate(16);
+            ->orderBy("created_at", "desc")
+            ->paginate(16);
         //Generate response
-        foreach ($orders as $order) {
-            $items[] = new OrderResource($order);
-        }
-        $data["items"] = $items;
-        $data = $this->setPaginationData($orders, $data);
-        return $data;
+        $data["items"] = OrderResource::collection($orders);
+        return  $this->setPaginationData($orders, $data);
     }
 
-    public function store($validatedData)
+    public function store($validatedData): string
     {
         DB::beginTransaction();
         $totlaPrice = 0;
@@ -43,6 +40,7 @@ class OrderService extends MainService
         foreach (Product::query()->whereIn("id", $productsIds)->get(["id", "price"]) as $product) {
             $totlaPrice += $product->price * $products->firstWhere('id', $product->id)['amount'];
         }
+
         $order = Order::create([
             "user_id" => auth()->id(),
             "total_price" => $totlaPrice,
@@ -58,17 +56,20 @@ class OrderService extends MainService
                 'amount' => DB::raw('amount - ' . $products->firstWhere('id', $id)['amount'])
             ]);
         }
+
         //Create Session URL
         $sessionURL = $this->payService->checkout(auth()->user(), $order);
         DB::commit();
         return $sessionURL;
     }
 
-    public function show($id)
+    public function show($id): OrderResource
     {
-        $order = Order::query()->where("user_id", auth()->id())
-            ->with(["user", "products"])
-            ->findOrFail($id);
-        return new OrderResource($order);
+        return new OrderResource(
+            Order::query()
+                ->where('user_id', auth()->id())
+                ->with('user', 'products')
+                ->findOrFail($id)
+        );
     }
 }

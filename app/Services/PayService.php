@@ -18,7 +18,7 @@ use Stripe\Exception\SignatureVerificationException;
  */
 class PayService extends MainService
 {
-    public function checkout($user, $order)
+    public function checkout($user, $order): string
     {
         $lineItems = [];
         $products = $order->products;
@@ -57,10 +57,11 @@ class PayService extends MainService
         return $checkOutSession->url;
     }
 
-public function paySuccess($session_id)
+    public function paySuccess($session_id): bool
     {
         DB::beginTransaction();
-        $order = Order::query()->where(['session_id' => $session_id])
+        $order = Order::query()
+            ->where(['session_id' => $session_id])
             ->firstOrFail();
         if (!$order->status == OrderStatus::PENDING->value) {
             $order->status = OrderStatus::DONE->value;
@@ -70,10 +71,11 @@ public function paySuccess($session_id)
         return true;
     }
 
-public function payCancel($session_id)
+    public function payCancel($session_id): bool
     {
         DB::beginTransaction();
-        $order = Order::query()->where(['status' => OrderStatus::PENDING->value, 'session_id' => $session_id])
+        $order = Order::query()
+            ->where(['status' => OrderStatus::PENDING->value, 'session_id' => $session_id])
             ->with('products')
             ->firstOrFail();
         foreach ($order->products as $product) {
@@ -87,7 +89,7 @@ public function payCancel($session_id)
         return true;
     }
 
-    public function webhook()
+    public function webhook(): bool
     {
         $webhookSecret = config('custom.stripe_webhook');
         $payload = @file_get_contents('php://input');
@@ -111,7 +113,8 @@ public function payCancel($session_id)
                 $session = $event->data->object;
                 $sessionId = $session->id;
                 DB::beginTransaction();
-                $order = Order::query()->where(['session_id' => $sessionId])
+                $order = Order::query()
+                    ->where(['session_id' => $sessionId])
                     ->firstOrFail();
                 if (!$order->status == OrderStatus::PENDING->value) {
                     $order->status = OrderStatus::DONE->value;
