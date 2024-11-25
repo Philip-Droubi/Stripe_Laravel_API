@@ -40,12 +40,12 @@ class OrderRequest extends FormRequest
         ];
     }
 
-    public function failedValidation(Validator $validator)
+    public function failedValidation(Validator $validator): never
     {
         throw new HttpResponseException($this->fail($validator->errors()->first()));
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [];
     }

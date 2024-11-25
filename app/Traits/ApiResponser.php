@@ -2,9 +2,11 @@
 
 namespace App\Traits;
 
+use Illuminate\Http\JsonResponse;
+
 trait ApiResponser
 {
-    protected function success($data = null, $message = "ok", $code = 200)
+    protected function success($data = null, $message = "ok", $code = 200): JsonResponse
     {
         return response()->json([
             'status' => 'Success',
@@ -14,7 +16,7 @@ trait ApiResponser
         ], $code);
     }
 
-    protected function fail($message = "", $code = 400, $data = null)
+    protected function fail($message = "", $code = 400, $data = null): JsonResponse
     {
         return response()->json([
             'status' => 'Error',
@@ -26,10 +28,11 @@ trait ApiResponser
 
     protected function setPaginationData($objects, array $data): array
     {
-        $data['last_page'] = $objects->lastPage();
-        $data['total'] = $objects->total();
-        $data['perPage'] = (int)$objects->perPage();
-        $data['currentPage'] = $objects->currentPage();
-        return $data;
+        return $data + [
+            'last_page' => $objects->lastPage(),
+            'total' => $objects->total(),
+            'perPage' => $objects->perPage(),
+            'currentPage' => $objects->currentPage(),
+        ];
     }
 }
